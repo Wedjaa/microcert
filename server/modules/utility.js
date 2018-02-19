@@ -30,12 +30,10 @@ class Utility {
                 let target = path.resolve(parent, child);
                 try {
                     fs.mkdirSync(target);
-                    console.log(`Directory ${target} created!`);
                 } catch (err) {
                     if (err.code !== 'EEXIST') {
                         throw err;
                     }
-                    console.log(`Directory ${target} already exists!`);
                 }
                 return target;
             }, initialFolder);
