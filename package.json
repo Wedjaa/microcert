@@ -4,7 +4,7 @@
   "description": "A micro certification authority.",
   "main": "server/index.js",
   "scripts": {
-    "start": "nodemon",
+    "start": "MICROCA_CA_PATH='ca-data' nodemon",
     "test": "node tests/index.js"
   },
   "repository": {
@@ -23,9 +23,10 @@
   "homepage": "https://github.com/Wedjaa/microcert#readme",
   "dependencies": {
     "js-yaml": "^3.10.0",
+    "logform": "^1.2.2",
     "nodemon": "^1.15.0",
     "pkijs": "^2.1.22",
-    "winston": "^2.4.0"
+    "winston": "^3.0.0-rc1"
   },
   "nodemonConfig": {
     "watch": [
