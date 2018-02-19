@@ -1,7 +1,6 @@
 const path = require('path');
-const winston = require('winston');
 
-console.log(winston.createLogger)
+const { createLogger, format, transports} = require('winston');
 
 const Singleton = require('./singleton');
 const Utility = require('./utility');
@@ -13,13 +12,47 @@ let defaultConfig = {
     level: 'info',
     path: 'logs',
     filename: 'microcert.log',
+    format: '[${timestamp}] [${level}] ${logger} - ${message} ${rest}', 
     console: true,
-    console_level: 'trace',
+    console_level: 'silly',
     formats: {
-        splat: true,
-        simple: true
+        colorize: true,
+        timestamp: true
     }
 };
+
+function formatted(format, info) {
+    let formatRe = /\$\{([^\}]+)\}/g;
+    let match = formatRe.exec(format);
+    while (match) {
+        let propName = match[1];
+        if (info[propName]) {
+            format = format.replace(new RegExp(`\\$\\{${propName}\\}`, 'g'), info[propName]);
+            delete info[propName];
+        }
+        if (propName === 'rest') {
+            let restValue = '';
+            if (Object.keys(info).length) {
+                restValue = JSON.stringify(info);
+            }
+            format = format.replace(new RegExp(`\\$\\{${propName}\\}`, 'g'), restValue);
+        }
+        /**
+         * This will force the RegExp to start from the beginning
+         * every time.
+         */
+        formatRe.lastIndex = 0;
+        match = formatRe.exec(format);
+    }
+    return format;
+}
+
+function formatter(msgFormat, logger) {
+    return format.printf( info => {
+        info.logger = logger;
+        return formatted(msgFormat, info);
+    });
+}
 
 class Logger {
     
@@ -40,9 +73,14 @@ class Logger {
 
     reconfigure(config) {
         const self = this;
-        if (!this.config) {
-            this.config = defaultConfig;
+        
+        config = config ? config : this.config;
+
+        if (!config) {
+            config = defaultConfig;
         }
+
+        this.config = config;
         this.loggers = {};
         this.loggers.default = this.createLogger(this.config);
         if (config.loggers) {
@@ -63,40 +101,41 @@ class Logger {
         let folder = config.path;
         let filename = config.filename;
         Utility.createFolder(folder);
-        let transports = [ new transports.File({
+        let logTransports = [ new transports.File({
             filename: `${path.join(folder, filename)}`,
             level: config.level
         })];
 
         if (config.console) {
-            transports.push(new transports.Console( {
+            logTransports.push(new transports.Console( {
                 level: config.console_level
             }))
         }
 
         let exceptionHandlers = undefined;
         if (config.exceptions) {
-            new transports.File({ filename: `${path.join(folder, config.exceptions)}` });
+            exceptionHandlers = new transports.File({ filename: `${path.join(folder, config.exceptions)}` });
         }
 
         return createLogger({
-            format: this.combineFormats(config.formats),
-            transports: transports,
+            format: this.combineFormats(config.formats, config.format, sender),
+            transports: logTransports,
             exceptionHandlers: exceptionHandlers
         });
 
     }
 
-    combineFormats(formats) {
+    combineFormats(formats, msgFormat, sender) {
         let formatsFuncs = Object.keys(formats).map(formatName => {
             let formatOpts = formats[formatName];
-            let args = [];
+            let opts = {};
             if (typeof formatOpts !== 'boolean') {
-                args = [formatOpts];
+                opts = formatOpts;
             }
-            return format[formatName].bind(this, args);
+            return format[formatName](opts);
         });
-        return format.combine(formatsFuncs);
+        formatsFuncs.push(formatter(msgFormat, sender));
+        return format.combine.apply(format, formatsFuncs);
     }
     
 }
