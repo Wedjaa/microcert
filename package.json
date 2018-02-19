@@ -1,0 +1,39 @@
+{
+  "name": "microcert",
+  "version": "1.0.0",
+  "description": "A micro certification authority.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "nodemon",
+    "test": "node tests/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Wedjaa/microcert.git"
+  },
+  "keywords": [
+    "nodejs",
+    "x509"
+  ],
+  "author": "Fabio 'MrWHO' Torchetti",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Wedjaa/microcert/issues"
+  },
+  "homepage": "https://github.com/Wedjaa/microcert#readme",
+  "dependencies": {
+    "js-yaml": "^3.10.0",
+    "nodemon": "^1.15.0",
+    "pkijs": "^2.1.22",
+    "winston": "^2.4.0"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "config/*",
+      "server/*",
+      "client/*",
+      "package.json"
+    ],
+    "delay": "1000"
+  }
+}

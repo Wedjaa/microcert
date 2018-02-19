@@ -1,0 +1,38 @@
+server:
+  auth: simple
+  port: 3000
+  workers: 0
+
+auth:
+  simple:
+    -
+      user: admin
+      password: microcert
+      enabled: true
+      roles: [ 'user', 'admin' ]
+
+log:
+  level: info
+  filename: microcert
+  path: logs
+  console: true
+  console_level: trace
+  exceptions: exceptions.log
+  formats:
+    timestamp: true
+    label:
+      label: 'microcert'
+    splat: true
+    simple: true
+
+  loggers:
+    configuration:
+      level: error
+      console: false
+      filename: configuration
+    server:
+      level: error
+
+ca:
+  path: ca
+
